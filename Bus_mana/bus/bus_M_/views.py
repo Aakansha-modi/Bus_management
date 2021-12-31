@@ -5,9 +5,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.utils import timezone
 
 from django.contrib.auth import authenticate, login, logout
-
 from django.contrib import messages
-
 from django.contrib.auth.decorators import login_required
 
 # Create your views here.
@@ -24,8 +22,6 @@ def registerPage(request):
 		form = CreateUserForm(request.POST)
 		if form.is_valid():
 			form.save()
-		else:
-			messages.info(request, 'User with this email already exists')
 	context = {'form':form}
 	return render(request, 'accounts/register.html', context)
 
@@ -55,7 +51,6 @@ def driver(request):
     context={'allD': allD} 
     return render(request,'accounts/driver.html',context)
 
-
 @login_required(login_url='login')
 def add_driver(request):
     if request.method == 'POST':
@@ -67,20 +62,15 @@ def add_driver(request):
                 post.save()
                 
                 return render(request, 'accounts/add_driver.html')  
-            
-
     else:
         return render(request,'accounts/add_driver.html')
 
 @login_required(login_url='login')
 def home(request):
     user1 = request.user
-    user_email=user1.username
-    
-    
+    user_email=user1.username 
     return render(request, 'accounts/user_home.html',{'user_email':user_email})
    
-
 @login_required(login_url='login')
 def admin_home(request):
     return render(request,'accounts/admin_home.html')
@@ -91,26 +81,37 @@ def delete_driver(request,id):
     obj.delete()
     return redirect('driver')
 
-@login_required(login_url='login')
+@login_required(login_url = 'login')
 def add_request(request):
     if request.method == 'POST':
             if request.POST.get('departure_time') and request.POST.get('startpoint') and request.POST.get('endpoint') and request.POST.get('number_seats'):
-                post=Request()
-                name=request.user.email
+                post = Request()
+                name = request.user.email
                 user_obj = User.objects.filter(email = name).first()
-                post.user_email= user_obj
-                post.departure_time= request.POST.get('departure_time')
-                post.startpoint= request.POST.get('startpoint')
-                post.endpoint= request.POST.get('endpoint')
-                post.number_seats= request.POST.get('number_seats')
-               
-                post.save()
-                
-                return render(request, 'accounts/add_request.html')  
-            
+                post.user_email = user_obj
+                post.departure_time = request.POST.get('departure_time')
+                post.startpoint = request.POST.get('startpoint')
+                post.endpoint = request.POST.get('endpoint')
+                post.number_seats = request.POST.get('number_seats')
+                curr_datetime = datetime.datetime.now()
 
+                # May need to change for different local format
+                given_datetime = datetime.datetime.strptime(post.departure_time, '%Y-%m-%dT%H:%M') 
+                
+                if (int(post.number_seats) > 0 and given_datetime > curr_datetime):
+                    post.save()
+                    messages.success(request, 'Request sent successfully')
+                elif(int(post.number_seats) < 1 and given_datetime <= curr_datetime):
+                    messages.error(request, 'Request falied! Invalid Number of Seats and Invalid Time')
+                elif(int(post.number_seats) < 1):
+                    messages.error(request, 'Request falied! Invalid number of seats')
+                elif(given_datetime <= curr_datetime):
+                    messages.error(request, 'Request falied! Invalid Time')
+                else:
+                    assert(0)
+
+                return render(request, 'accounts/add_request.html')  
     else:
-       
         return render(request,'accounts/add_request.html')
 
 @login_required(login_url='login')
@@ -118,7 +119,6 @@ def request(request):
     allD=Request.objects.all()
     context={'allD': allD} 
     return render(request,'accounts/request.html',context)
-
 
 @login_required(login_url='login')
 def add_bus(request):
@@ -179,7 +179,6 @@ def delete_schedule(request,id):
     obj.delete()
     return redirect('add_schedule')
 
-
 @login_required(login_url='login')
 def add_wallet(request):
     if request.method == 'POST':
@@ -193,7 +192,6 @@ def add_wallet(request):
                 return render(request, 'accounts/add_wallet.html')  
     else:
         return render(request,'accounts/add_wallet.html')
-
 
 @login_required(login_url='login')
 def book_bus(request):
@@ -252,7 +250,6 @@ def booking(request,id):
             return redirect('/book_bus')
         amount=wallet_obj.balance
         return render(request,'accounts/booking.html',{'seats' : seats,'amount':amount})
-
 
 def schedule(request,data=None):
     if data==None:
