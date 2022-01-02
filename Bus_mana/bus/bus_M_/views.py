@@ -198,7 +198,7 @@ def book_bus(request):
     date=timezone.now().date()
     curr_date = date.today()
     curr_day = calendar.day_name[curr_date.weekday()]
-    allD=Schedule.objects.filter(day='Friday')
+    allD=Schedule.objects.filter(day=curr_day)
     context={'allD': allD,'date':date,'curr_day':curr_day}
     return render(request,'accounts/Book_bus.html',context)
 
@@ -243,8 +243,14 @@ def booking(request,id):
     else:
         user=request.user 
         seats_obj = Schedule.objects.filter(schedule_id = id).first()
+        schedule_time = seats_obj.time
+        now = datetime.datetime.now()
+        current_time = now.strftime("%H:%M:%S")
         seats = seats_obj.available_seats
         wallet_obj = Wallet.objects.filter(wallet_id = user).first()
+        if(current_time>(str(schedule_time))):
+            messages.info(request,'bus is already gone')
+            return redirect('/book_bus')
         if(wallet_obj is None):
             messages.info(request, 'You dont have wallet')
             return redirect('/book_bus')
@@ -286,6 +292,30 @@ def view_booking(request):
     schedule_obj = Schedule.objects.all()
     return render(request,'accounts/Past_bookings.html',{'booking_obj' : booking_obj, 'schedule_obj' : schedule_obj})
 
+def cancel_booking(request,id):
+    user=request.user
+    booking_obj = Booking.objects.filter (booking_id = id).first()
+    sc_id = booking_obj.schedule_id
+    schedule_obj = Schedule.objects.filter(schedule_id = str(sc_id)).first()
+    schedule_time = schedule_obj.time
+    now = datetime.datetime.now()
+    current_time = now.strftime("%H:%M:%S")
+    if booking_obj.refund_status:
+        messages.info(request,'This booking is already cancelled')
+        return redirect('/view_booking')
+    if(current_time > (str(schedule_time))):
+        messages.info(request,'You cant cancel the booking')
+        return redirect('/view_booking')
+    wallet_obj = Wallet.objects.filter(wallet_id = user).first()
+    seats = int(booking_obj.seat_no)
+    wallet_obj.balance = wallet_obj.balance + (25*seats) 
+    wallet_obj.save()
+    schedule_obj.available_seats = schedule_obj.available_seats + seats
+    schedule_obj.save()
+    booking_obj.refund_status = True
+    booking_obj.save()
+    messages.info(request,'booking cancelled')
+    return redirect('/view_booking')
 
 
 
