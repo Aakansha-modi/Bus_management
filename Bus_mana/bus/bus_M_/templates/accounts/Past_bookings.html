@@ -18,13 +18,15 @@
            <p class="description">Starting Point :  {{p.schedule_id.start}}</p>
            <p class="description">Destination :  {{p.schedule_id.destination}}</p>
            <p class="description">Schedule Time:  {{p.schedule_id.time}}</p>
-           
+           <p><a type="submit" style="margin-left: 70px;" href="{% url 'cancel_booking' p.booking_id %}">Cancel booking</a></p>
             </div>
         </div>
       </div>
       {%endfor%}
      
-
+      {% for message in messages %}
+      <p id="messages">{{message}}</p>
+    {% endfor %}
       
 
     </div>
