@@ -264,8 +264,8 @@ def schedule(request,data=None):
     elif data=='Wednesday':
         sch=Schedule.objects.filter(day='Wednesday')
         context={'sch': sch}
-    elif data=='Thrusday':
-        sch=Schedule.objects.filter(day='Thrusday')
+    elif data=='Thursday':
+        sch=Schedule.objects.filter(day='Thursday')
         context={'sch': sch}
     elif data=='Friday':
         sch=Schedule.objects.filter(day='Friday')
