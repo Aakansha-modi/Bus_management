@@ -288,36 +288,47 @@ def schedule(request,data=None):
 def view_booking(request):
     user = request.user
     booking_obj = Booking.objects.filter(user_email = user).all()
-    print(booking_obj)
     schedule_obj = Schedule.objects.all()
     return render(request,'accounts/Past_bookings.html',{'booking_obj' : booking_obj, 'schedule_obj' : schedule_obj})
 
+
 def cancel_booking(request,id):
-    user=request.user
-    booking_obj = Booking.objects.filter (booking_id = id).first()
-    sc_id = booking_obj.schedule_id
-    schedule_obj = Schedule.objects.filter(schedule_id = str(sc_id)).first()
-    schedule_time = schedule_obj.time
-    now = datetime.datetime.now()
-    current_time = now.strftime("%H:%M:%S")
-    if booking_obj.refund_status:
-        messages.info(request,'This booking is already cancelled')
-        return redirect('/view_booking')
-    if(current_time > (str(schedule_time))):
-        messages.info(request,'You cant cancel the booking')
-        return redirect('/view_booking')
-    wallet_obj = Wallet.objects.filter(wallet_id = user).first()
-    seats = int(booking_obj.seat_no)
-    wallet_obj.balance = wallet_obj.balance + (25*seats) 
-    wallet_obj.save()
-    schedule_obj.available_seats = schedule_obj.available_seats + seats
-    schedule_obj.save()
-    booking_obj.refund_status = True
-    booking_obj.save()
-    messages.info(request,'booking cancelled')
-    return redirect('/view_booking')
-
-
+    if request.method == 'POST':
+            if request.POST.get('seat_no'):
+                user=request.user
+                seats = request.POST.get('seat_no')
+                booking_obj = Booking.objects.filter(booking_id = id).first()
+                seat_no = booking_obj.seat_no
+                if(int(seats)>int(seat_no)):
+                    messages.info(request,'You cant cancel the seats more than the booked seat')
+                    return redirect('/view_booking')
+                wallet_obj = Wallet.objects.filter(wallet_id = user).first()
+                wallet_obj.balance = wallet_obj.balance + (25*int(seats)) 
+                wallet_obj.save()
+                sc_id = booking_obj.schedule_id
+                schedule_obj = Schedule.objects.filter(schedule_id = str(sc_id)).first()
+                schedule_obj.available_seats = schedule_obj.available_seats + int(seats)
+                schedule_obj.save()
+                booking_obj.refund_status = True
+                booking_obj.seat_no = booking_obj.seat_no - int(seats)
+                booking_obj.save()
+                messages.info(request,'booking cancelled')
+                return render(request, 'accounts/Past_bookings.html')
+    else:
+        booking_obj = Booking.objects.filter (booking_id = id).first()
+        sc_id = booking_obj.schedule_id
+        schedule_obj = Schedule.objects.filter(schedule_id = str(sc_id)).first()
+        schedule_time = schedule_obj.time
+        now = datetime.datetime.now()
+        current_time = now.strftime("%H:%M:%S")
+        if booking_obj.seat_no is 0:
+            messages.info(request,'This booking is already cancelled')
+            return redirect('/view_booking')
+        if(current_time > (str(schedule_time))):
+            messages.info(request,'You cant cancel the booking')
+            return redirect('/view_booking')
+        seats = booking_obj.seat_no
+        return render(request,'accounts/cancel_booking.html',{'seats' : seats})
 
 
 	
