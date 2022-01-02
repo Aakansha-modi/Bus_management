@@ -2,13 +2,28 @@
 
 {% block content %}
 
+{% if messages %}
+<ul class="messages">
+  {% for message in messages %}
+    <div class="container-fluid p-0">
+      <div class="alert {{ message.tags }} alert-dismissible" role="alert" >
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span aria-hidden="True">&times;</span>
+        </button>
+        {{ message }}
+      </div>
+    </div>
+  {% endfor %}
+</ul>
+{% endif %}   
+
 		<br>
          <section class="contact" data-aos="fade-up" data-aos-easing="ease-in-out" data-aos-duration="500">
       <div class="container">
 
         <div class="row">
           <div class="col-lg-6">
-            <form action="forms/contact.php" method="post" role="form" class="php-email-form" style="width: 1300px;">
+            <form action="forms/contact.php" method="post" role="form" class="php-email-form" style="width: 400px; margin-left:250px;">
 
                 
                 <div class="form-group mt-3">
@@ -63,9 +78,7 @@
                
             </form>
           </div>
-          {% for message in messages %}
-            <p id="messages">{{message}}</p>
-          {% endfor %}
+          
         </div>
 
       </div>
