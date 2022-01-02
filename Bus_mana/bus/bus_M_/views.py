@@ -213,14 +213,14 @@ def booking(request,id):
                 i=1
                 wallet_obj = Wallet.objects.filter(wallet_id = user).first()
                 if int(wallet_obj.balance) < int(amount):
-                    messages.info(request, 'Your Balance is low')
+                    messages.error(request, 'Your Balance is low')
                     i=0
                 seats_obj = Schedule.objects.filter(schedule_id = id).first()
                 if int(seats)<0:
-                    messages.info(request, 'Please enter correct seat number')
+                    messages.error(request, 'Please enter correct seat number')
                     i=0
                 if int(seats_obj.available_seats) < int(seats):
-                    messages.info(request, 'Seats are not available')
+                    messages.error(request, 'Seats are not available')
                     i=0
                 if i==0:
                     return redirect('/book_bus')    
@@ -250,10 +250,10 @@ def booking(request,id):
         seats = seats_obj.available_seats
         wallet_obj = Wallet.objects.filter(wallet_id = user).first()
         if(current_time>(str(schedule_time))):
-            messages.info(request,'bus is already gone')
+            messages.error(request,'bus is already gone')
             return redirect('/book_bus')
         if(wallet_obj is None):
-            messages.info(request, 'You dont have wallet')
+            messages.error(request, 'You dont have wallet')
             return redirect('/book_bus')
         amount=wallet_obj.balance
         return render(request,'accounts/booking.html',{'seats' : seats,'amount':amount})
@@ -301,7 +301,7 @@ def cancel_booking(request,id):
                 booking_obj = Booking.objects.filter(booking_id = id).first()
                 seat_no = booking_obj.seat_no
                 if(int(seats)>int(seat_no)):
-                    messages.info(request,'You cant cancel the seats more than the booked seat')
+                    messages.error(request,'You cant cancel the seats more than the booked seat')
                     return redirect('/view_booking')
                 wallet_obj = Wallet.objects.filter(wallet_id = user).first()
                 wallet_obj.balance = wallet_obj.balance + (25*int(seats)) 
@@ -323,10 +323,10 @@ def cancel_booking(request,id):
         now = datetime.datetime.now()
         current_time = now.strftime("%H:%M:%S")
         if booking_obj.seat_no is 0:
-            messages.info(request,'This booking is already cancelled')
+            messages.error(request,'This booking is already cancelled')
             return redirect('/view_booking')
         if(current_time > (str(schedule_time))):
-            messages.info(request,'You cant cancel the booking')
+            messages.error(request,'You cant cancel the booking')
             return redirect('/view_booking')
         seats = booking_obj.seat_no
         return render(request,'accounts/cancel_booking.html',{'seats' : seats})
