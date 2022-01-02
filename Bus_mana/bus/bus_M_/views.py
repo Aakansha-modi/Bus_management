@@ -239,7 +239,8 @@ def booking(request,id):
                 bus_ob = Schedule.objects.filter(schedule_id = schedule_id ).first()
                 post.schedule_id = bus_ob
                 post.save()
-                return render(request, 'accounts/booking.html')
+                messages.info(request,'Your seat is booked')
+                return render(request, 'accounts/Past_bookings.html')
     else:
         user=request.user 
         seats_obj = Schedule.objects.filter(schedule_id = id).first()
