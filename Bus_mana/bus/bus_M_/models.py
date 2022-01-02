@@ -50,7 +50,7 @@ class Schedule(models.Model):
     destination=models.CharField(max_length=300,null=False)
     available_seats = models.IntegerField(null=False)
     day= models.CharField(max_length=200,null=False,choices=CATEGORY)
-    running_status = models.BooleanField(default=True)
+    
 
     def __str__(self):
         return str(self.schedule_id)
