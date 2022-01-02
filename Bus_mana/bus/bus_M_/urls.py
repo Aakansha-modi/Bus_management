@@ -26,7 +26,7 @@ urlpatterns = [
     path('home/', views.home, name='home'),
     path('view_booking/', views.view_booking, name='view_booking'),
     path('admin_home/', views.admin_home, name='admin_home'),
-  
+    path('cancel_booking/<str:id>',views.cancel_booking,name='cancel_booking'),
 
     
 ]
