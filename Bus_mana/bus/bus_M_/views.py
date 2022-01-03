@@ -114,7 +114,9 @@ def add_request(request):
                 # May need to change for different local format
                 given_datetime = datetime.datetime.strptime(post.departure_time, '%Y-%m-%dT%H:%M') 
                 
-                if (int(post.number_seats) > 0 and given_datetime > curr_datetime):
+                if(int(post.number_seats)>2^23-1):
+                    messages.error(request, 'Invalid seat number')
+                elif (int(post.number_seats) > 0 and given_datetime > curr_datetime):
                     post.save()
                     messages.success(request, 'Request sent successfully')
                 elif(int(post.number_seats) < 1 and given_datetime <= curr_datetime):
@@ -348,6 +350,9 @@ def cancel_booking(request,id):
                 seats = request.POST.get('seat_no')
                 booking_obj = Booking.objects.filter(booking_id = id).first()
                 seat_no = booking_obj.seat_no
+                if(int(seats)<0):
+                    messages.error(request,'Invalid seat number')
+                    return redirect('/view_booking')
                 if(int(seats)>int(seat_no)):
                     messages.error(request,'You cant cancel the seats more than the booked seat')
                     return redirect('/view_booking')
