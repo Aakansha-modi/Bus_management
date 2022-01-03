@@ -169,6 +169,7 @@ def bus(request):
         return render(request,'accounts/bus.html',context)
     return redirect('/')
 
+@login_required(login_url='login')
 def delete_bus(request,id):
     user=request.user
     login_obj = AdminUser.objects.filter(admin_id = user).first()
@@ -361,6 +362,7 @@ def cancel_booking(request,id):
                 booking_obj.seat_no = booking_obj.seat_no - int(seats)
                 if booking_obj.seat_no is 0:
                     booking_obj.delete()
+                    messages.info(request,'booking cancelled')
                     return redirect('/view_booking')
                 booking_obj.save()
                 messages.info(request,'booking cancelled')
