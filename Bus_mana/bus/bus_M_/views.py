@@ -47,23 +47,31 @@ def logoutUser(request):
 
 @login_required(login_url='login')
 def driver(request):
-    allD=Driver.objects.all()
-    context={'allD': allD} 
-    return render(request,'accounts/driver.html',context)
+    user=request.user
+    login_obj = AdminUser.objects.filter(admin_id = user).first()
+    if login_obj:
+        allD=Driver.objects.all()
+        context={'allD': allD} 
+        return render(request,'accounts/driver.html',context)
+    return redirect('/')
 
 @login_required(login_url='login')
 def add_driver(request):
-    if request.method == 'POST':
-            if request.POST.get('name') and request.POST.get('phone_number') and request.POST.get('licenese_number'):
-                post=Driver()
-                post.name= request.POST.get('name')
-                post.phone_number= request.POST.get('phone_number')
-                post.licenese_number= request.POST.get('licenese_number')
-                post.save()
+    user=request.user
+    login_obj = AdminUser.objects.filter(admin_id = user).first()
+    if login_obj:
+        if request.method == 'POST':
+                if request.POST.get('name') and request.POST.get('phone_number') and request.POST.get('licenese_number'):
+                    post=Driver()
+                    post.name= request.POST.get('name')
+                    post.phone_number= request.POST.get('phone_number')
+                    post.licenese_number= request.POST.get('licenese_number')
+                    post.save()
                 
-                return render(request, 'accounts/add_driver.html')  
-    else:
-        return render(request,'accounts/add_driver.html')
+                    return render(request, 'accounts/add_driver.html')  
+        else:
+            return render(request,'accounts/add_driver.html')
+    return redirect('/')
 
 @login_required(login_url='login')
 def home(request):
@@ -73,7 +81,11 @@ def home(request):
    
 @login_required(login_url='login')
 def admin_home(request):
-    return render(request,'accounts/admin_home.html')
+    user=request.user
+    login_obj = AdminUser.objects.filter(admin_id = user).first()
+    if login_obj:
+        return render(request,'accounts/admin_home.html')
+    return redirect('/')
 
 @login_required(login_url='login')
 def delete_driver(request,id):
@@ -116,30 +128,42 @@ def add_request(request):
 
 @login_required(login_url='login')
 def request(request):
-    allD=Request.objects.all()
-    context={'allD': allD} 
-    return render(request,'accounts/request.html',context)
+    user=request.user
+    login_obj = AdminUser.objects.filter(admin_id = user).first()
+    if login_obj:
+        allD=Request.objects.all()
+        context={'allD': allD} 
+        return render(request,'accounts/request.html',context)
+    return redirect('/')
 
 @login_required(login_url='login')
 def add_bus(request):
-    if request.method == 'POST':
-        if request.POST.get('availability') and request.POST.get('capacity') and request.POST.get('driver_id'):
-            post=Bus()
-            post.availability= request.POST.get('availability')
-            post.capacity= request.POST.get('capacity')
-            name=request.POST.get('driver_id')
-            driver_obj = Driver.objects.filter(driver_id = name).first()
-            post.driver_id = driver_obj
-            post.save()
+    user=request.user
+    login_obj = AdminUser.objects.filter(admin_id = user).first()
+    if login_obj:
+        if request.method == 'POST':
+            if request.POST.get('availability') and request.POST.get('capacity') and request.POST.get('driver_id'):
+                post=Bus()
+                post.availability= request.POST.get('availability')
+                post.capacity= request.POST.get('capacity')
+                name=request.POST.get('driver_id')
+                driver_obj = Driver.objects.filter(driver_id = name).first()
+                post.driver_id = driver_obj
+                post.save()
+                return render(request,'accounts/add_bus.html')
+        else:
             return render(request,'accounts/add_bus.html')
-    else:
-        return render(request,'accounts/add_bus.html')
+    return redirect('/')
 
 @login_required(login_url='login')
 def bus(request):
-    allD=Bus.objects.all()
-    context={'allD': allD} 
-    return render(request,'accounts/bus.html',context)
+    user=request.user
+    login_obj = AdminUser.objects.filter(admin_id = user).first()
+    if login_obj:
+        allD=Bus.objects.all()
+        context={'allD': allD} 
+        return render(request,'accounts/bus.html',context)
+    return redirect('/')
 
 def delete_bus(request,id):
     obj=Bus.objects.get(bus_id=id)
@@ -148,30 +172,37 @@ def delete_bus(request,id):
 
 @login_required(login_url='login')
 def add_schedule(request):
-    if request.method == 'POST':
-            if request.POST.get('time') and request.POST.get('start') and request.POST.get('destination')  and request.POST.get('available_seats')  and request.POST.get('day') and request.POST.get('running_status') and request.POST.get('bus_id'):
-                post=Schedule()
-                bus_id=request.POST.get('bus_id')
+    user=request.user
+    login_obj = AdminUser.objects.filter(admin_id = user).first()
+    if login_obj:
+        if request.method == 'POST':
+                if request.POST.get('time') and request.POST.get('start') and request.POST.get('destination')  and request.POST.get('available_seats')  and request.POST.get('day') and request.POST.get('running_status') and request.POST.get('bus_id'):
+                    post=Schedule()
+                    bus_id=request.POST.get('bus_id')
                 
-                bus_obj = Bus.objects.filter(bus_id = bus_id).first()
-                post.bus_id= bus_obj
-                post.time= request.POST.get('time')
-                post.start= request.POST.get('start')
-                post.destination= request.POST.get('destination')
-                post.available_seats= request.POST.get('available_seats')
-                post.day= request.POST.get('day')
-                post.running_status= request.POST.get('running_status')
-                post.save()
-                return render(request, 'accounts/add_schedule.html')  
-    else:
-        return render(request,'accounts/add_schedule.html')
-
+                    bus_obj = Bus.objects.filter(bus_id = bus_id).first()
+                    post.bus_id= bus_obj
+                    post.time= request.POST.get('time')
+                    post.start= request.POST.get('start')
+                    post.destination= request.POST.get('destination')
+                    post.available_seats= request.POST.get('available_seats')
+                    post.day= request.POST.get('day')
+                    post.running_status= request.POST.get('running_status')
+                    post.save()
+                    return render(request, 'accounts/add_schedule.html')  
+        else:
+            return render(request,'accounts/add_schedule.html')
+    return redirect('/')
 
 @login_required(login_url='login')
 def view_schedule(request):
-    allD=Schedule.objects.all()
-    context={'allD': allD} 
-    return render(request,'accounts/View_schedule.html',context)
+    user=request.user
+    login_obj = AdminUser.objects.filter(admin_id = user).first()
+    if login_obj:
+        allD=Schedule.objects.all()
+        context={'allD': allD} 
+        return render(request,'accounts/View_schedule.html',context)
+    return redirect('/')
 
 @login_required(login_url='login')
 def delete_schedule(request,id):
@@ -181,17 +212,21 @@ def delete_schedule(request,id):
 
 @login_required(login_url='login')
 def add_wallet(request):
-    if request.method == 'POST':
-            if request.POST.get('wallet_id') and request.POST.get('balance'):
-                post=Wallet()
-                wallet_id=request.POST.get('wallet_id')
-                bus_obj = User.objects.filter(email = wallet_id).first()
-                post.wallet_id= bus_obj
-                post.balance= request.POST.get('balance')
-                post.save()
-                return render(request, 'accounts/add_wallet.html')  
-    else:
-        return render(request,'accounts/add_wallet.html')
+    user=request.user
+    login_obj = AdminUser.objects.filter(admin_id = user).first()
+    if login_obj:
+        if request.method == 'POST':
+                if request.POST.get('wallet_id') and request.POST.get('balance'):
+                    post=Wallet()
+                    wallet_id=request.POST.get('wallet_id')
+                    bus_obj = User.objects.filter(email = wallet_id).first()
+                    post.wallet_id= bus_obj
+                    post.balance= request.POST.get('balance')
+                    post.save()
+                    return render(request, 'accounts/add_wallet.html')  
+        else:
+            return render(request,'accounts/add_wallet.html')
+    return redirect('/')
 
 @login_required(login_url='login')
 def book_bus(request):
