@@ -75,9 +75,7 @@ def add_driver(request):
 
 @login_required(login_url='login')
 def home(request):
-    user1 = request.user
-    user_email=user1.username 
-    return render(request, 'accounts/user_home.html',{'user_email':user_email})
+    return render(request, 'accounts/user_home.html')
    
 @login_required(login_url='login')
 def admin_home(request):
