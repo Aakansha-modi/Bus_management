@@ -312,16 +312,25 @@ def cancel_booking(request,id):
                 schedule_obj.save()
                 booking_obj.refund_status = True
                 booking_obj.seat_no = booking_obj.seat_no - int(seats)
+                if booking_obj.seat_no is 0:
+                    booking_obj.delete()
+                    return redirect('/view_booking')
                 booking_obj.save()
                 messages.info(request,'booking cancelled')
                 return render(request, 'accounts/Past_bookings.html')
     else:
         booking_obj = Booking.objects.filter (booking_id = id).first()
+        booking_date = booking_obj.date_time.date()
+        date=timezone.now().date()
+        curr_date = date.today()
         sc_id = booking_obj.schedule_id
         schedule_obj = Schedule.objects.filter(schedule_id = str(sc_id)).first()
         schedule_time = schedule_obj.time
         now = datetime.datetime.now()
         current_time = now.strftime("%H:%M:%S")
+        if curr_date>booking_date:
+            messages.error(request,'You cant cancel the booking')
+            return redirect('/view_booking')
         if booking_obj.seat_no is 0:
             messages.error(request,'This booking is already cancelled')
             return redirect('/view_booking')
