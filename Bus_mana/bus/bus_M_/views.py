@@ -89,9 +89,13 @@ def admin_home(request):
 
 @login_required(login_url='login')
 def delete_driver(request,id):
-    obj=Driver.objects.get(driver_id=id)
-    obj.delete()
-    return redirect('driver')
+    user=request.user
+    login_obj = AdminUser.objects.filter(admin_id = user).first()
+    if login_obj:
+        obj=Driver.objects.get(driver_id=id)
+        obj.delete()
+        return redirect('driver')
+    return redirect('/')
 
 @login_required(login_url = 'login')
 def add_request(request):
@@ -166,9 +170,13 @@ def bus(request):
     return redirect('/')
 
 def delete_bus(request,id):
-    obj=Bus.objects.get(bus_id=id)
-    obj.delete()
-    return redirect('bus')
+    user=request.user
+    login_obj = AdminUser.objects.filter(admin_id = user).first()
+    if login_obj:
+        obj=Bus.objects.get(bus_id=id)
+        obj.delete()
+        return redirect('bus')
+    return redirect('/')
 
 @login_required(login_url='login')
 def add_schedule(request):
@@ -206,9 +214,13 @@ def view_schedule(request):
 
 @login_required(login_url='login')
 def delete_schedule(request,id):
-    obj=Schedule.objects.get(schedule_id=id)
-    obj.delete()
-    return redirect('add_schedule')
+    user=request.user
+    login_obj = AdminUser.objects.filter(admin_id = user).first()
+    if login_obj:
+        obj=Schedule.objects.get(schedule_id=id)
+        obj.delete()
+        return redirect('add_schedule')
+    return redirect('/')
 
 @login_required(login_url='login')
 def add_wallet(request):
