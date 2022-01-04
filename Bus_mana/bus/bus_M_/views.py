@@ -200,7 +200,7 @@ def add_schedule(request):
                     post.save()
                     return render(request, 'accounts/add_schedule.html')  
         else:
-            return render(request,'accounts/add_schedule.html')
+             return render(request, 'accounts/add_schedule.html')  
     return redirect('/')
 
 @login_required(login_url='login')
@@ -219,9 +219,42 @@ def delete_schedule(request,id):
     login_obj = AdminUser.objects.filter(admin_id = user).first()
     if login_obj:
         obj=Schedule.objects.get(schedule_id=id)
-        obj.delete()
+        curr_date = date.today()
+        curr_day = calendar.day_name[curr_date.weekday()]
+        if curr_day == obj.day:
+            messages.info(request, 'Your cannot delete the running schedule')
+            return redirect('/view_schedule')
+        obj.running_status=False
+        obj.save()
         return redirect('add_schedule')
     return redirect('/')
+
+@login_required(login_url='login')
+def update_schedule(request,id):
+    if request.method == 'POST':
+            if request.POST.get('time') and request.POST.get('start') and request.POST.get('destination') and request.POST.get('bus_id') and request.POST.get('running_status'):
+                    post = Schedule.objects.filter(schedule_id = id).first()
+                    bus_id=request.POST.get('bus_id')
+                    bus_obj = Bus.objects.filter(bus_id = bus_id).first()
+                    post.bus_id= bus_obj
+                    post.time= request.POST.get('time')
+                    post.start= request.POST.get('start')
+                    post.destination= request.POST.get('destination')
+                    post.running_status= request.POST.get('running_status')
+                    post.save()
+                    messages.info(request,'Schedule is updated')
+                    return render(request, 'accounts/view_schedule.html')  
+    else:
+        
+        seats_obj = Schedule.objects.filter(schedule_id = id).first()
+        bus_id=seats_obj.bus_id
+        time=seats_obj.time
+        start=seats_obj.start
+        destination=seats_obj.destination
+        running_status = seats_obj.running_status
+        context={'bus_id':bus_id,'time':time,'start':start,'destination':destination,'running_status':running_status}
+        return render(request,'accounts/update_schedule.html',context)
+
 
 @login_required(login_url='login')
 def add_wallet(request):
@@ -352,7 +385,7 @@ def cancel_booking(request,id):
                     messages.error(request,'Invalid seat number')
                     return redirect('/view_booking')
                 if(int(seats)>int(seat_no)):
-                    messages.error(request,'You cant cancel the seats more than the booked seat')
+                    messages.error(request,'You cannot cancel the seats more than the booked seat')
                     return redirect('/view_booking')
                 wallet_obj = Wallet.objects.filter(wallet_id = user).first()
                 wallet_obj.balance = wallet_obj.balance + (25*int(seats)) 
@@ -381,13 +414,13 @@ def cancel_booking(request,id):
         now = datetime.datetime.now()
         current_time = now.strftime("%H:%M:%S")
         if curr_date>booking_date:
-            messages.error(request,'You cant cancel the booking')
+            messages.error(request,'You cannot cancel the booking')
             return redirect('/view_booking')
         if booking_obj.seat_no is 0:
             messages.error(request,'This booking is already cancelled')
             return redirect('/view_booking')
         if(current_time > (str(schedule_time))):
-            messages.error(request,'You cant cancel the booking')
+            messages.error(request,'You cannot cancel the booking')
             return redirect('/view_booking')
         seats = booking_obj.seat_no
         return render(request,'accounts/cancel_booking.html',{'seats' : seats})
