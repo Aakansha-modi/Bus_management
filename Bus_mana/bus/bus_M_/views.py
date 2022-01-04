@@ -7,6 +7,10 @@ from django.utils import timezone
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.mail import send_mail
+from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
+from django.conf import settings
 
 # Create your views here.
 from .models import *
@@ -219,15 +223,42 @@ def delete_schedule(request,id):
     login_obj = AdminUser.objects.filter(admin_id = user).first()
     if login_obj:
         obj=Schedule.objects.get(schedule_id=id)
+        date=timezone.now().date()
         curr_date = date.today()
         curr_day = calendar.day_name[curr_date.weekday()]
         if curr_day == obj.day:
-            messages.info(request, 'Your cannot delete the running schedule')
+            booking_id = Booking.objects.filter(schedule_id = id).all()
+            size1 = booking_id.count()
+            i=0
+            while i<size1:      
+                date = booking_id[i].date_time.date()
+                if date==curr_date:
+                        book=booking_id[i].user_email
+                        user = User.objects.filter(username=book).first() 
+                        send_mail(
+                            'Deleted Schedule',
+                            'The schedule has been deleted.Therefore your booking has been cancelled.Thank you',
+                            settings.EMAIL_HOST_USER,
+                            [user.email],
+                        
+                            fail_silently=False,
+                            ) 
+                        seat_no = booking_id[i].seat_no
+                        wallet_obj = Wallet.objects.filter(wallet_id = user).first()
+                        wallet_obj.balance = wallet_obj.balance + (25*int(seat_no)) 
+                        wallet_obj.save()
+                        
+                        booking_id[i].delete()
+                        i=i+1
+            obj.running_status=False
+            obj.save()            
+            messages.info(request, 'The schedule has been deleted')
             return redirect('/view_schedule')
         obj.running_status=False
         obj.save()
         return redirect('add_schedule')
     return redirect('/')
+
 
 @login_required(login_url='login')
 def update_schedule(request,id):
@@ -241,7 +272,32 @@ def update_schedule(request,id):
                     post.start= request.POST.get('start')
                     post.destination= request.POST.get('destination')
                     post.running_status= request.POST.get('running_status')
+                    date=timezone.now().date()
+                    curr_date = date.today()
+                    booking_id = Booking.objects.filter(schedule_id = id).all()
                     post.save()
+                    size1 = booking_id.count()
+                    i=0
+                    while i<size1:
+                        date = booking_id[i].date_time.date()
+                        if date==curr_date:
+                            book=booking_id[i].user_email
+                            user = User.objects.filter(username=book).first()
+
+                            print(user.email)
+                            context={'post':post,'user':user}
+                            template=render_to_string('accounts/email_template4.html',context)
+                            send_mail(
+                                'Updated Schedule',
+                                template,
+                                settings.EMAIL_HOST_USER,
+                                [user.email],
+                        
+                                fail_silently=False,
+                            )
+                            i=i+1
+                   
+                    
                     messages.info(request,'Schedule is updated')
                     return render(request, 'accounts/view_schedule.html')  
     else:
@@ -266,9 +322,22 @@ def add_wallet(request):
                     post=Wallet()
                     wallet_id=request.POST.get('wallet_id')
                     bus_obj = User.objects.filter(email = wallet_id).first()
+                    wallet_obj = Wallet.objects.filter(wallet_id = bus_obj).first()
                     post.wallet_id= bus_obj
-                    post.balance= request.POST.get('balance')
+                    bal= request.POST.get('balance')
+                    post.balance = wallet_obj.balance+int(bal)
                     post.save()
+                    context={'bus_obj':bus_obj,'bal':bal,'wallet_obj':wallet_obj}
+                    template=render_to_string('accounts/email_template3.html',context)
+                    send_mail(
+                            'Balance successfully added',
+                            template,
+                            settings.EMAIL_HOST_USER,
+                            [bus_obj.email],
+                        
+                            fail_silently=False,
+                            ) 
+                    
                     return render(request, 'accounts/add_wallet.html')  
         else:
             return render(request,'accounts/add_wallet.html')
@@ -320,6 +389,16 @@ def booking(request,id):
                 bus_ob = Schedule.objects.filter(schedule_id = schedule_id ).first()
                 post.schedule_id = bus_ob
                 post.save()
+                context={'user':user,'seats':seats,'wallet_obj':wallet_obj,'amount':amount}
+                template=render_to_string('accounts/email_template.html',context)
+                send_mail(
+                            'Booking confirmed',
+                            template,
+                            settings.EMAIL_HOST_USER,
+                            [user.email],
+                        
+                            fail_silently=False,
+                            ) 
                 messages.info(request,'Your seat is booked')
                 return render(request, 'accounts/Past_bookings.html')
     else:
@@ -388,6 +467,7 @@ def cancel_booking(request,id):
                     messages.error(request,'You cannot cancel the seats more than the booked seat')
                     return redirect('/view_booking')
                 wallet_obj = Wallet.objects.filter(wallet_id = user).first()
+                balance = (25*int(seats))
                 wallet_obj.balance = wallet_obj.balance + (25*int(seats)) 
                 wallet_obj.save()
                 sc_id = booking_obj.schedule_id
@@ -396,6 +476,16 @@ def cancel_booking(request,id):
                 schedule_obj.save()
                 booking_obj.refund_status = True
                 booking_obj.seat_no = booking_obj.seat_no - int(seats)
+                context={'user':user,'seats':seats,'wallet_obj':wallet_obj,'balance':balance}
+                template=render_to_string('accounts/email_template2.html',context)
+                send_mail(
+                            'Booking cancelled',
+                            template,
+                            settings.EMAIL_HOST_USER,
+                            [user.email],
+                        
+                            fail_silently=False,
+                            ) 
                 if booking_obj.seat_no is 0:
                     booking_obj.delete()
                     messages.info(request,'booking cancelled')
@@ -410,7 +500,7 @@ def cancel_booking(request,id):
         curr_date = date.today()
         sc_id = booking_obj.schedule_id
         schedule_obj = Schedule.objects.filter(schedule_id = str(sc_id)).first()
-        schedule_time = schedule_obj.time
+        schedule_time = schedule_obj.time 
         now = datetime.datetime.now()
         current_time = now.strftime("%H:%M:%S")
         if curr_date>booking_date:
