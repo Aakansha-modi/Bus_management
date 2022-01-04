@@ -1,7 +1,20 @@
 {%  extends 'accounts/main1.html' %}
 
 {% block content %}
-  
+{% if messages %}
+<ul class="messages">
+  {% for message in messages %}
+    <div class="container-fluid p-0">
+      <div class="alert {{ message.tags }} alert-dismissible" role="alert" >
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span aria-hidden="True">&times;</span>
+        </button>
+        {{ message }}
+      </div>
+    </div>
+  {% endfor %}
+</ul>
+{% endif %}
 	<br>
 
     <section class="contact" data-aos="fade-up" data-aos-easing="ease-in-out" data-aos-duration="500">
@@ -30,6 +43,10 @@
               <br>
               <div class="form-group mt-3">
                 <input type="text" class="form-control" name="destination" id="subject" value="{{destination}}" required>
+              </div>
+              <br>
+              <div class="form-group mt-3">
+                <input type="text" class="form-control" name="running_status" id="subject" value="{{running_status}}" required>
               </div>
               <br>
               
