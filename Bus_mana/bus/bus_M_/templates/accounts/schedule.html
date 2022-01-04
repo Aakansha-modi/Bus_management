@@ -37,6 +37,7 @@
                                         </thead>
                                     <tbody>
                                         {% for p in sch %}
+                                        {%if p.running_status%}
                                         <tr>
                                             <td>{{p.schedule_id}}</td>
                                             <td>{{p.time}}</td>
@@ -45,8 +46,9 @@
                                             <td>{{p.bus_id}}</td>
                                             <td>{{p.available_seats}}</td>
                                            
-                                            
+                                          
                                         </tr>
+                                        {%endif%}
                                         {%endfor%}
                                     </tbody>
                                         </table>
