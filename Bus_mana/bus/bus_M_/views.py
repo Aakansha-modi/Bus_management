@@ -322,11 +322,16 @@ def add_wallet(request):
                     post=Wallet()
                     wallet_id=request.POST.get('wallet_id')
                     bus_obj = User.objects.filter(email = wallet_id).first()
-                    wallet_obj = Wallet.objects.filter(wallet_id = bus_obj).first()
+                   
                     post.wallet_id= bus_obj
+                    wallet_obj = Wallet.objects.filter(wallet_id = bus_obj).first()
                     bal= request.POST.get('balance')
-                    post.balance = wallet_obj.balance+int(bal)
+                    if(wallet_obj is None):
+                              post.balance = int(bal)
+                    else:
+                      post.balance = wallet_obj.balance+int(bal)
                     post.save()
+                    wallet_obj = Wallet.objects.filter(wallet_id = bus_obj).first()
                     context={'bus_obj':bus_obj,'bal':bal,'wallet_obj':wallet_obj}
                     template=render_to_string('accounts/email_template3.html',context)
                     send_mail(
